@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}후원 목록{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <h2 class="card-title">
+            {% if user.is_staff %}
+                후원 관리
+            {% else %}
+                내 후원 내역
+            {% endif %}
+        </h2>
+        
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>날짜</th>
+                        {% if user.is_staff %}
+                            <th>후원자</th>
+                        {% endif %}
+                        <th>프로젝트</th>
+                        <th>리워드</th>
+                        <th>금액</th>
+                        <th>상태</th>
+                        {% if user.is_staff %}
+                            <th>관리</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pledge in pledges %}
+                        <tr>
+                            <td>{{ pledge.created_at|date:"Y-m-d H:i" }}</td>
+                            {% if user.is_staff %}
+                                <td>{{ pledge.user.username }}</td>
+                            {% endif %}
+                            <td>
+                                <a href="{% url 'project_detail' pledge.project.id %}">
+                                    {{ pledge.project.title }}
+                                </a>
+                            </td>
+                            <td>
+                                {% if pledge.reward %}
+                                    {{ pledge.reward.title }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>{{ pledge.amount|intcomma }}원</td>
+                            <td>
+                                <span class="badge {% if pledge.status == 'approved' %}bg-success
+                                    {% elif pledge.status == 'rejected' %}bg-danger
+                                    {% elif pledge.status == 'cancelled' %}bg-secondary
+                                    {% else %}bg-warning{% endif %}">
+                                    {{ pledge.get_status_display }}
+                                </span>
+                            </td>
+                            {% if user.is_staff and pledge.status == 'pending' %}
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#approveModal{{ pledge.id }}">
+                                        승인
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal{{ pledge.id }}">
+                                        거절
+                                    </button>
+                                    
+                                    <!-- 승인 모달 -->
+                                    <div class="modal fade" id="approveModal{{ pledge.id }}" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <form method="post" action="{% url 'pledge_approve' pledge.id %}">
+                                                    {% csrf_token %}
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">후원 승인</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">관리자 메시지</label>
+                                                            <textarea name="admin_message" class="form-control"></textarea>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                                                        <button type="submit" class="btn btn-success">승인</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 거절 모달 -->
+                                    <div class="modal fade" id="rejectModal{{ pledge.id }}" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <form method="post" action="{% url 'pledge_reject' pledge.id %}">
+                                                    {% csrf_token %}
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">후원 거절</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">거절 사유</label>
+                                                            <textarea name="admin_message" class="form-control" required></textarea>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                                                        <button type="submit" class="btn btn-danger">거절</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            {% elif user.is_staff %}
+                                <td>
+                                    {% if pledge.admin_message %}
+                                        <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#messageModal{{ pledge.id }}">
+                                            메시지 보기
+                                        </button>
+                                        
+                                        <!-- 메시지 모달 -->
+                                        <div class="modal fade" id="messageModal{{ pledge.id }}" tabindex="-1">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">관리자 메시지</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        {{ pledge.admin_message|linebreaks }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

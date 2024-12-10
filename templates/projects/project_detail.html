@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% load humanize %}
+
+{% block title %}{{ project.title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-8">
+            {% if project.thumbnail %}
+                <img src="{{ project.thumbnail.url }}" class="img-fluid mb-4" alt="{{ project.title }}">
+            {% endif %}
+            <h1>{{ project.title }}</h1>
+            <p class="lead">{{ project.subtitle }}</p>
+            
+            <div class="progress mb-3">
+                <div class="progress-bar" role="progressbar" 
+                     style="width: {% widthratio project.current_amount project.target_amount 100 %}%">
+                </div>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col">
+                    <h3>{{ project.current_amount|intcomma }}원</h3>
+                    <p class="text-muted">목표 금액: {{ project.target_amount|intcomma }}원</p>
+                </div>
+                <div class="col text-end">
+                    <h3>{% widthratio project.current_amount project.target_amount 100 %}%</h3>
+                    <p class="text-muted">달성률</p>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">프로젝트 소개</h5>
+                    <p class="card-text">{{ project.description|linebreaks }}</p>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">위험요소 및 해결방안</h5>
+                    <p class="card-text">{{ project.risks|linebreaks }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">창작자 정보</h5>
+                    <p class="card-text">{{ project.creator.username }}</p>
+                </div>
+            </div>
+
+            {% if user.is_authenticated %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">내 잔액</h5>
+                    <p class="card-text">{{ user.balance|intcomma }}원</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">리워드 선택</h5>
+                    {% for reward in project.rewards.all %}
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title">{{ reward.title }}</h6>
+                                <p class="card-text">{{ reward.description }}</p>
+                                <p class="card-text">
+                                    <strong>{{ reward.amount|intcomma }}원</strong>
+                                    {% if reward.stock >= 0 %}
+                                        <small class="text-muted">(남은 수량: {{ reward.stock }}개)</small>
+                                    {% endif %}
+                                </p>
+                                {% if user.is_authenticated %}
+                                    {% if project.creator == user %}
+                                        <button class="btn btn-secondary" disabled>본인 프로젝트는 후원할 수 없습니다</button>
+                                    {% elif user.balance < reward.amount %}
+                                        <button class="btn btn-secondary" disabled>잔액이 부족합니다</button>
+                                    {% elif reward.stock == 0 %}
+                                        <button class="btn btn-secondary" disabled>재고가 없습니다</button>
+                                    {% else %}
+                                        <a href="{% url 'projects:pledge_create' project.id reward.id %}" 
+                                           class="btn btn-primary">{{ reward.amount|intcomma }}원 후원하기</a>
+                                    {% endif %}
+                                {% else %}
+                                    <a href="{% url 'accounts:login' %}" class="btn btn-primary">로그인하고 후원하기</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

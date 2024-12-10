@@ -1,0 +1,95 @@
+<!-- base_generic.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}UrbanFix{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding-top: 80px; /* Offset for fixed header */
+            padding-bottom: 60px; /* Offset for footer */
+        }
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background-color: #343a40;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+        }
+        .card {
+            border-radius: 15px;
+            border: none;
+            overflow: hidden;
+        }
+        .card-body {
+            padding: 20px;
+        }
+        .custom-button {
+            padding: 10px 20px;
+            background-color: #343a4000;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .custom-button:hover {
+            background-color: #343a4000;
+        }
+        .image-card {
+            border-radius: 15px;
+            border: 1px solid #343a4000;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .image-card img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .bg-dark-text-white {
+            background-color: #343a40;
+            color: white;
+        }
+        .text-center {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<header class="bg-dark text-white py-3 px-4 fixed-top">
+    <div class="container-fluid">
+        <div class="row justify-content-between align-items-center">
+            <div class="col-auto">
+                <a href="/">
+                    <img src="/static/images/logo.png" width="100" height="auto" alt="GoTo UrbanFix Home"/>
+                </a>
+            </div>
+            <div class="col-auto">
+                <nav>
+                    <a class="custom-button" href="/report">신고</a>
+                    <a class="custom-button" href="/mall">포인트 상점</a>
+                    {% if user.is_authenticated %}
+                      <a href="{% url 'logout' %}">로그아웃</a>
+                    {% else %}
+                      <a href="{% url 'login' %}">로그인</a>
+                    {% endif %}
+                </nav>
+            </div>
+        </div>
+    </div>
+</header>
+<main class="container mt-5">
+    {% block content %}
+    {% endblock %}
+</main>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</body>
+</html>

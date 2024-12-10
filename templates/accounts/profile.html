@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}프로필{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h3 class="card-title">프로필 정보</h3>
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                            <input type="{% if field.field.widget.input_type %}{{ field.field.widget.input_type }}{% else %}text{% endif %}" 
+                                   name="{{ field.name }}"
+                                   id="{{ field.id_for_label }}"
+                                   class="form-control {% if field.errors %}is-invalid{% endif %}"
+                                   {% if field.value %}value="{{ field.value }}"{% endif %}>
+                            {% if field.help_text %}
+                                <small class="form-text text-muted">{{ field.help_text }}</small>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <div class="alert alert-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-primary">정보 수정</button>
+                </form>
+            </div>
+        </div>
+
+        {% if not user.is_creator %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">창작자 되기</h5>
+                    <p class="card-text">나만의 프로젝트를 시작하고 싶으신가요?</p>
+                    <form method="post" action="{% url 'accounts:become_creator' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success">창작자 되기</button>
+                    </form>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-8">
+        {% if backed_projects %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h3 class="card-title">후원한 프로젝트</h3>
+                    <div class="list-group">
+                        {% for pledge in backed_projects %}
+                            <a href="{% url 'projects:project_detail' pledge.project.id %}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">{{ pledge.project.title }}</h5>
+                                    <small>{{ pledge.amount|intcomma }}원</small>
+                                </div>
+                                <p class="mb-1">{{ pledge.project.subtitle }}</p>
+                                <small>후원일: {{ pledge.created_at|date }}</small>
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if user.is_creator and created_projects %}
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title">내 프로젝트</h3>
+                    <div class="list-group">
+                        {% for project in created_projects %}
+                            <a href="{% url 'projects:project_detail' project.id %}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">{{ project.title }}</h5>
+                                    <small>{{ project.status }}</small>
+                                </div>
+                                <p class="mb-1">{{ project.subtitle }}</p>
+                                <div class="progress mt-2" style="height: 3px;">
+                                    <div class="progress-bar" role="progressbar" style="width: {% widthratio project.current_amount project.target_amount 100 %}%"></div>
+                                </div>
+                                <small>
+                                    {{ project.current_amount|intcomma }}원 달성 
+                                    ({% widthratio project.current_amount project.target_amount 100 %}%)
+                                </small>
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

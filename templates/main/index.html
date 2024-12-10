@@ -1,0 +1,106 @@
+<!-- templates/main/index.html -->
+
+{% extends "base_generic.html" %}
+
+{% block title %}
+  홈 - UrbanFix
+{% endblock %}
+
+{% block content %}
+  <div class="card mb-4 shadow-sm">
+      <div class="card-body border-bottom border-primary d-flex justify-content-between align-items-center bg-secondary">
+          <h2 class="h5 text-light mb-0">공공시설물 불편한점 신고</h2>
+          <button class="btn btn-primary d-flex align-items-center" onclick="location.href='/report'">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
+                  <path
+                      d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z">
+                  </path>
+                  <circle cx="12" cy="13" r="3"></circle>
+              </svg>
+              신고
+          </button>
+      </div>
+      <div class="card-body border-bottom bg-light">
+          <div class="d-flex justify-content-between align-items-center">
+              <h3 class="h6 text-secondary mb-0">현재 포인트:</h3>
+              {% if user.is_authenticated %}
+              <p class="display-4 text-primary mb-0">{{ user.points }}P</p>
+              {% else %}
+              <p class="display-4 text-primary mb-0">로그인 해주세요.</p>
+              {% endif %}
+          </div>
+      </div>
+  </div>
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
+      <div class="col">
+          <div class="card border rounded">
+              <div class="card-body bg-dark-text-white text-center">
+                  <h3 class="h6">최근 신고 내역</h3>
+              </div>
+              <div class="card-body">
+                  <ul class="list-unstyled" id="recent-reports">
+                      {% for report in recent_reports %}
+                      <li class="d-flex mb-3">
+                              <img src="{{ report.image.url }}" width="64" height="64" alt="이미지 업데이트 예정"
+                                   class="rounded me-3">
+                          <div>
+                              <h4 class="h6">{{ report.title }}</h4>
+                              <p class="text-muted">{{ report.created_at|date:"Y-m-d" }}</p>
+                          </div>
+                      </li>
+                      {% endfor %}
+                  </ul>
+              </div>
+          </div>
+      </div>
+      <div class="col">
+          <div class="card border rounded">
+              <div class="card-body bg-dark-text-white text-center">
+                  <h3 class="h6">포인트 상점</h3>
+              </div>
+              {% for item in items %}
+              <div class="card-body">
+                <div class="row row-cols-2 g-2">
+                  <div class="col text-center">
+                    <a href="{% url 'item_detail' item.id %}" class="text-decoration-none text-dark">
+                        <div class="p-3 border rounded bg-light">
+                            <div class="mb-2">
+                                <img src="{{ item.image.url }}" width="80" height="80" alt="이미지 업데이트 예정"
+                                     class="rounded">
+                                <div class="image-text">{{ item.name }}</div>
+                            </div>
+                            <div>
+                              <p class="text-muted">{{ item.price }}포인트</p>
+                          </div>
+                      </div>
+                  </a>
+              </div>
+              {% endfor %}
+          </div>
+      </div>
+  </div>
+  <div class="col">
+    <div class="card border rounded">
+        <div class="card-body bg-dark-text-white text-center">
+            <h3 class="h6">내 신고 내역</h3>
+        </div>
+        <div class="card-body">
+            <ul class="list-unstyled" id="your-reports">
+                {% for report in user_reports %}
+                <li class="d-flex mb-3">
+                    <a href="{% url 'report_detail' report.id %}">
+                        <img src="{{ report.image.url }}" width="64" height="64" alt="Report Image" class="rounded me-3">
+                    </a>
+                    <div>
+                        <h4 class="h6">{{ report.title }}</h4>
+                        <p class="text-muted">Reported on {{ report.created_at|date:"Y-m-d" }}</p>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+  </div>
+  </div>
+{% endblock %}

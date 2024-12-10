@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}프로젝트 생성{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">프로젝트 생성</h2>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" id="project-form">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <h4 class="mb-3">프로젝트 정보</h4>
+                            {% for field in form %}
+                            <div class="mb-3">
+                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                {{ field.errors }}
+                                {% if field.name == 'category' %}
+                                    <select name="{{ field.name }}" id="{{ field.id_for_label }}" class="form-select" {% if field.field.required %}required{% endif %}>
+                                        <option value="">카테고리 선택</option>
+                                        {% for value, label in field.field.choices %}
+                                            <option value="{{ value }}" {% if field.value == value %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                {% elif field.field.widget.input_type == 'file' %}
+                                    {{ field }}
+                                {% else %}
+                                    <input type="{{ field.field.widget.input_type|default:'text' }}" 
+                                           name="{{ field.name }}"
+                                           id="{{ field.id_for_label }}"
+                                           class="form-control"
+                                           {% if field.value %}value="{{ field.value }}"{% endif %}
+                                           {% if field.field.required %}required{% endif %}>
+                                {% endif %}
+                                {% if field.help_text %}
+                                <div class="form-text">{{ field.help_text }}</div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h4 class="mb-0">리워드 설정</h4>
+                                <button type="button" class="btn btn-outline-primary btn-sm" id="add-reward">
+                                    + 리워드 추가
+                                </button>
+                            </div>
+                            <p class="text-muted mb-4">최소 1개 이상의 리워드를 설정해주세요. 리워드는 후원자들이 선택할 수 있는 옵션입니다.</p>
+                            
+                            {{ reward_formset.management_form }}
+                            <div id="rewards-container">
+                                {% for reward_form in reward_formset %}
+                                <div class="reward-form card mb-3">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">리워드 #{{ forloop.counter }}</h5>
+                                        {% if not forloop.first %}
+                                        <button type="button" class="btn btn-outline-danger btn-sm remove-reward">삭제</button>
+                                        {% endif %}
+                                    </div>
+                                    <div class="card-body">
+                                        {% for field in reward_form %}
+                                            {% if field.name == 'DELETE' %}
+                                                <div class="d-none">{{ field }}</div>
+                                            {% else %}
+                                                <div class="mb-3">
+                                                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                                    {{ field.errors }}
+                                                    {% if field.name == 'delivery_date' %}
+                                                        <input type="date" 
+                                                               name="{{ field.html_name }}" 
+                                                               id="{{ field.id_for_label }}" 
+                                                               class="form-control"
+                                                               {% if field.value %}value="{{ field.value|date:'Y-m-d' }}"{% endif %}
+                                                               {% if field.field.required %}required{% endif %}>
+                                                    {% else %}
+                                                        <input type="{{ field.field.widget.input_type|default:'text' }}" 
+                                                               name="{{ field.html_name }}" 
+                                                               id="{{ field.id_for_label }}" 
+                                                               class="form-control"
+                                                               {% if field.value %}value="{{ field.value }}"{% endif %}
+                                                               {% if field.field.required %}required{% endif %}>
+                                                    {% endif %}
+                                                    {% if field.help_text %}
+                                                    <div class="form-text">{{ field.help_text }}</div>
+                                                    {% endif %}
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary">프로젝트 생성</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('project-form');
+    const rewardsContainer = document.getElementById('rewards-container');
+    const addRewardBtn = document.getElementById('add-reward');
+    const totalFormsInput = document.querySelector('[name="reward_formset-TOTAL_FORMS"]');
+    const maxForms = 10;  // 최대 리워드 개수
+
+    // 리워드 추가 버튼 클릭 이벤트
+    addRewardBtn.addEventListener('click', function() {
+        const currentForms = rewardsContainer.children.length;
+        if (currentForms >= maxForms) {
+            alert('최대 ' + maxForms + '개까지만 리워드를 추가할 수 있습니다.');
+            return;
+        }
+
+        // 마지막 리워드 폼을 복제
+        const lastForm = rewardsContainer.lastElementChild;
+        const newForm = lastForm.cloneNode(true);
+        
+        // 폼 번호 업데이트
+        const formRegex = /reward_formset-\d+/g;
+        const formNumber = currentForms;
+        const newHtml = newForm.innerHTML.replace(formRegex, `reward_formset-${formNumber}`);
+        newForm.innerHTML = newHtml;
+
+        // 헤더 업데이트
+        const header = newForm.querySelector('.card-header h5');
+        header.textContent = `리워드 #${formNumber + 1}`;
+
+        // 입력값 초기화
+        newForm.querySelectorAll('input:not([type="hidden"])').forEach(input => {
+            input.value = '';
+        });
+
+        // 삭제 버튼 표시
+        const deleteBtn = newForm.querySelector('.remove-reward');
+        if (deleteBtn) {
+            deleteBtn.style.display = 'block';
+        }
+
+        // 폼 추가 및 카운터 업데이트
+        rewardsContainer.appendChild(newForm);
+        totalFormsInput.value = currentForms + 1;
+    });
+
+    // 리워드 삭제 버튼 이벤트 (이벤트 위임)
+    rewardsContainer.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-reward')) {
+            const rewardForm = e.target.closest('.reward-form');
+            const deleteInput = rewardForm.querySelector('input[name$="-DELETE"]');
+            
+            if (deleteInput) {
+                deleteInput.checked = true;
+                rewardForm.style.display = 'none';
+            } else {
+                rewardForm.remove();
+                
+                // 폼 번호 재정렬
+                const forms = rewardsContainer.children;
+                totalFormsInput.value = forms.length;
+                
+                Array.from(forms).forEach((form, index) => {
+                    const header = form.querySelector('.card-header h5');
+                    if (header) {
+                        header.textContent = `리워드 #${index + 1}`;
+                    }
+                });
+            }
+        }
+    });
+
+    // 폼 제출 이벤트
+    form.addEventListener('submit', function(e) {
+        // 제출 전 리워드 폼 유효성 검사
+        const rewardForms = rewardsContainer.children;
+        let isValid = true;
+        
+        Array.from(rewardForms).forEach((form, index) => {
+            const inputs = form.querySelectorAll('input:not([type="hidden"])');
+            inputs.forEach(input => {
+                if (!input.value) {
+                    isValid = false;
+                    alert(`리워드 #${index + 1}의 ${input.name} 필드는 필수 항목입니다.`);
+                }
+            });
+        });
+
+        if (!isValid) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

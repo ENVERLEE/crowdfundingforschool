@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% load humanize %}
+
+{% block title %}프로젝트 목록{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>진행 중인 프로젝트</h2>
+            {% if user.is_authenticated %}
+            <a href="{% url 'projects:project_create' %}" class="btn btn-primary">프로젝트 만들기</a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="row">
+        {% if projects %}
+            {% for project in projects %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    {% if project.thumbnail %}
+                        <img src="{{ project.thumbnail.url }}" class="card-img-top" alt="{{ project.title }}">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ project.title }}</h5>
+                        <p class="card-text">{{ project.subtitle }}</p>
+                        <div class="progress mb-2">
+                            <div class="progress-bar" role="progressbar" 
+                                 style="width: {{ project.current_amount|div:project.target_amount|mul:100 }}%">
+                            </div>
+                        </div>
+                        <p class="card-text">
+                            <small class="text-muted">
+                                {{ project.current_amount|intcomma }}원 달성 
+                                ({{ project.current_amount|div:project.target_amount|mul:100|floatformat:0 }}%)
+                            </small>
+                        </p>
+                        <a href="{% url 'projects:project_detail' project.pk %}" class="btn btn-primary">자세히 보기</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col">
+                <p>현재 진행 중인 프로젝트가 없습니다.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

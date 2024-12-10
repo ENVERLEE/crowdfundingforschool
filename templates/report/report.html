@@ -1,0 +1,38 @@
+{% extends "base_generic.html" %}
+
+{% block title %}
+  제보 - UrbanFix
+{% endblock %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Report Issue</title>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    document.getElementById('id_location').value = position.coords.latitude + ',' + position.coords.longitude;
+                }, function(error) {
+                    console.error("Error Code = " + error.code + " - " + error.message);
+                });
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        });
+    </script>
+</head>
+<body>
+    <h1>Report an Issue</h1>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type="hidden" id="id_location" name="location" />
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>
+{% endblock %}
+

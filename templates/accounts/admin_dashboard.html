@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}관리자 대시보드{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- 신규 회원 포인트 지급 -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title">신규 회원 포인트 지급</h3>
+                {% if pending_users %}
+                    <div class="list-group">
+                        {% for user in pending_users %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">{{ user.username }}</h5>
+                                    <small>가입일: {{ user.date_joined|date }}</small>
+                                </div>
+                                <p class="mb-1">{{ user.email }}</p>
+                                <form method="post" action="{% url 'give_initial_points' user.id %}" class="mt-2">
+                                    {% csrf_token %}
+                                    <div class="input-group mb-2">
+                                        <input type="number" name="points" class="form-control" placeholder="지급할 포인트" required>
+                                        <button type="submit" class="btn btn-primary">지급</button>
+                                    </div>
+                                    <input type="text" name="message" class="form-control" placeholder="관리자 메시지 (선택사항)">
+                                </form>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">포인트 지급 대기중인 신규 회원이 없습니다.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 창작자 신청 관리 -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title">창작자 신청 관리</h3>
+                {% if pending_creators %}
+                    <div class="list-group">
+                        {% for user in pending_creators %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">{{ user.username }}</h5>
+                                    <small>신청일: {{ user.creator_application_date|date }}</small>
+                                </div>
+                                <p class="mb-1">
+                                    회사명: {{ user.company_name }}<br>
+                                    사업자등록번호: {{ user.business_registration_number }}
+                                </p>
+                                <p class="text-muted">{{ user.company_description|truncatewords:30 }}</p>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#approveCreatorModal{{ user.id }}">
+                                        승인
+                                    </button>
+                                    <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectCreatorModal{{ user.id }}">
+                                        거절
+                                    </button>
+                                </div>
+
+                                <!-- 승인 모달 -->
+                                <div class="modal fade" id="approveCreatorModal{{ user.id }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <form method="post" action="{% url 'approve_creator' user.id %}">
+                                                {% csrf_token %}
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">창작자 승인</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p>{{ user.username }}님의 창작자 신청을 승인하시겠습니까?</p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                                                    <button type="submit" class="btn btn-success">승인</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 거절 모달 -->
+                                <div class="modal fade" id="rejectCreatorModal{{ user.id }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <form method="post" action="{% url 'reject_creator' user.id %}">
+                                                {% csrf_token %}
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">창작자 신청 거절</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">거절 사유</label>
+                                                        <textarea name="reason" class="form-control" required></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                                                    <button type="submit" class="btn btn-danger">거절</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">승인 대기중인 창작자 신청이 없습니다.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

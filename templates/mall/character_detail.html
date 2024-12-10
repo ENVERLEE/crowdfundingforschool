@@ -1,0 +1,29 @@
+<!-- templates/mall/character_detail.html -->
+
+{% extends 'base_generic.html' %}
+
+{% block content %}
+<h2>Character Details</h2>
+<p>Name: {{ character.name }}</p>
+<p>Level: {{ character.level }}</p>
+<p>Experience: {{ character.experience }}</p>
+<p>Points: {{ character.points }}</p>
+
+<!-- Display Base Character Image if no items equipped -->
+{% if not equipped_hat and not equipped_shirt and not equipped_pants %}
+    <img src="{% static 'path_to_base_character_image.png' %}" alt="Character Base">
+{% else %}
+    <!-- Display combined character image based on equipped items -->
+    {% if equipped_hat %}
+        <img src="{{ equipped_hat.character_image.url }}" alt="Equipped Hat">
+    {% endif %}
+    {% if equipped_shirt %}
+        <img src="{{ equipped_shirt.character_image.url }}" alt="Equipped Shirt">
+    {% endif %}
+    {% if equipped_pants %}
+        <img src="{{ equipped_pants.character_image.url }}" alt="Equipped Pants">
+    {% endif %}
+{% endif %}
+
+<a href="{% url 'update_character_points' %}">Update Points</a>
+{% endblock %}
